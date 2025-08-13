@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suno Track Indexer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .input-section {
+            margin-bottom: 30px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .filename-display {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            position: relative;
+        }
+        
+        .filename-display.success {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        button.secondary {
+            background: #757575;
+        }
+        
+        button.danger {
+            background: #f44336;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .track-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .track-item {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .track-item:hover {
+            background: #f5f5f5;
+        }
+        
+        .track-item:last-child {
+            border-bottom: none;
+        }
+        
+        .track-filename {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .track-preview {
+            color: #666;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🎵 Suno Track Indexer</h1>
+            <p class="subtitle">Paste track info → Get filename → Build searchable index</p>
+            
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-value" id="trackCount">0</span>
+                    <span class="stat-label">Tracks Indexed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="sessionCount">0</span>
+                    <span class="stat-label">This Session</span>
+                </div>
+            </div>
+            
+            <div class="input-section">
+                <label for="trackInfo">Paste Track Info:</label>
+                <textarea id="trackInfo" rows="8" placeholder="Paste the full text block from Suno here..."></textarea>
+            </div>
+            
+            <div id="filenameSection" style="display: none;">
+                <label>Suggested Filename:</label>
+                <div class="filename-display" id="filenameDisplay">
+                    <span id="filenameText"></span>
+                    <button class="copy-btn" onclick="copyFilename()">Copy</button>
+                </div>
+            </div>
+            
+            <div>
+                <button onclick="generateFilename()">Generate Filename</button>
+                <button onclick="addToIndex()" id="addBtn" disabled>Add to Index</button>
+                <button onclick="clearForm()" class="secondary">Clear</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 style="margin-bottom: 20px;">Search & Browse</h2>
+            <input type="text" class="search-box" id="searchBox" placeholder="Search tracks by any text..." oninput="searchTracks()">
+            <div class="track-list" id="trackList"></div>
+        </div>
+        
+        <div class="card">
+            <h2 style="margin-bottom: 20px;">Index Management</h2>
+            <button onclick="exportIndex()">Export Index (JSON)</button>
+            <button onclick="document.getElementById('importFile').click()">Import Index</button>
+            <button onclick="clearIndex()" class="danger">Clear All</button>
+            <input type="file" id="importFile" style="display: none;" accept=".json" onchange="importIndex(event)">
+        </div>
+    </div>
+    
+    <div class="modal" id="trackModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal()">&times;</button>
+            <h2 id="modalTitle" style="margin-bottom: 20px;"></h2>
+            <pre id="modalContent" style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 14px;"></pre>
+        </div>
+    </div>
+    
+    <script>
+        let index = [];
+        let currentFilename = '';
+        let sessionAddCount = 0;
+        
+        // Load index from localStorage on page load
+        window.onload = function() {
+            const saved = localStorage.getItem('sunoIndex');
+            if (saved) {
+                index = JSON.parse(saved);
+                updateStats();
+                displayTracks();
+            }
+        };
+        
+        function generateFilename() {
+            const trackInfo = document.getElementById('trackInfo').value.trim();
+            if (!trackInfo) {
+                alert('Please paste track information first');
+                return;
+            }
+            
+            // Extract title/name from the text (adjust these patterns based on Suno's format)
+            let title = 'untitled';
+            
+            // Try to find title patterns (adjust based on actual Suno format)
+            const titlePatterns = [
+                /Title:\s*(.+)/i,
+                /Name:\s*(.+)/i,
+                /^([^\n]+)/  // First line as fallback
+            ];
+            
+            for (const pattern of titlePatterns) {
+                const match = trackInfo.match(pattern);
+                if (match && match[1]) {
+                    title = match[1].trim();
+                    break;
+                }
+            }
+            
+            // Clean title for filename
+            title = title.toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '_')
+                .substring(0, 50);
+            
+            // Generate unique ID (timestamp + random)
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(2, 6);
+            const uniqueId = `${timestamp}_${random}`;
+            
+            // Create filename
+            currentFilename = `suno_${title}_${uniqueId}.wav`;
+            
+            // Display filename
+            document.getElementById('filenameText').textContent = currentFilename;
+            document.getElementById('filenameSection').style.display = 'block';
+            document.getElementById('addBtn').disabled = false;
+        }
+        
+        function copyFilename() {
+            navigator.clipboard.writeText(currentFilename);
+            const btn = event.target;
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = 'Copy', 2000);
+        }
+        
+        function addToIndex() {
+            const trackInfo = document.getElementById('trackInfo').value.trim();
+            if (!trackInfo || !currentFilename) {
+                alert('Please generate a filename first');
+                return;
+            }
+            
+            // Add to index
+            const entry = {
+                filename: currentFilename,
+                content: trackInfo,
+                added: new Date().toISOString()
+            };
+            
+            index.push(entry);
+            sessionAddCount++;
+            
+            // Save to localStorage
+            localStorage.setItem('sunoIndex', JSON.stringify(index));
+            
+            // Update UI
+            updateStats();
+            displayTracks();
+            
+            // Show success
+            document.getElementById('filenameDisplay').classList.add('success');
+            setTimeout(() => {
+                document.getElementById('filenameDisplay').classList.remove('success');
+            }, 2000);
+            
+            // Clear form for next track
+            setTimeout(clearForm, 2000);
+        }
+        
+        function clearForm() {
+            document.getElementById('trackInfo').value = '';
+            document.getElementById('filenameSection').style.display = 'none';
+            document.getElementById('addBtn').disabled = true;
+            currentFilename = '';
+        }
+        
+        function updateStats() {
+            document.getElementById('trackCount').textContent = index.length;
+            document.getElementById('sessionCount').textContent = sessionAddCount;
+        }
+        
+        function displayTracks(tracks = index) {
+            const trackList = document.getElementById('trackList');
+            
+            if (tracks.length === 0) {
+                trackList.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No tracks found</div>';
+                return;
+            }
+            
+            trackList.innerHTML = tracks.map(track => `
+                <div class="track-item" onclick="showTrack('${track.filename}')">
+                    <div class="track-filename">${track.filename}</div>
+                    <div class="track-preview">${track.content.substring(0, 100)}...</div>
+                </div>
+            `).join('');
+        }
+        
+        function searchTracks() {
+            const query = document.getElementById('searchBox').value.toLowerCase();
+            
+            if (!query) {
+                displayTracks();
+                return;
+            }
+            
+            const filtered = index.filter(track => 
+                track.filename.toLowerCase().includes(query) ||
+                track.content.toLowerCase().includes(query)
+            );
+            
+            displayTracks(filtered);
+        }
+        
+        function showTrack(filename) {
+            const track = index.find(t => t.filename === filename);
+            if (!track) return;
+            
+            document.getElementById('modalTitle').textContent = track.filename;
+            document.getElementById('modalContent').textContent = track.content;
+            document.getElementById('trackModal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('trackModal').classList.remove('active');
+        }
+        
+        function exportIndex() {
+            const dataStr = JSON.stringify(index, null, 2);
+            const blob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `suno_index_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function importIndex(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        index = imported;
+                        localStorage.setItem('sunoIndex', JSON.stringify(index));
+                        updateStats();
+                        displayTracks();
+                        alert(`Imported ${imported.length} tracks successfully!`);
+                    } else {
+                        alert('Invalid index file format');
+                    }
+                } catch (err) {
+                    alert('Error importing file: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        function clearIndex() {
+            if (confirm(`Are you sure you want to clear all ${index.length} tracks from the index?`)) {
+                index = [];
+                sessionAddCount = 0;
+                localStorage.removeItem('sunoIndex');
+                updateStats();
+                displayTracks();
+            }
+        }
+        
+        // Click outside modal to close
+        window.onclick = function(event) {
+            const modal = document.getElementById('trackModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
